@@ -305,3 +305,55 @@ select * from tblBookLoans
 
 --End of database creation code-----------------------------------------------
 
+
+
+
+--stored procedure for count of copies of The Last Tribe at sharpstown location ( location 2)
+create procedure spTLTCount
+as
+
+select   numberOfCopies as 'copies of The Last Tribe' from tblbookcopies where  bookid = 1 and  branchid=2
+
+--execute
+exec spTLTCount
+
+-- stored procedure for counting THe Lost Tribe ( as a variable) at all locations
+
+create procedure spFindByNameLocal
+
+ @titlename varchar(50)
+as
+
+
+SELECT tblbooks.bookid, tblbooks.title, tblLIBRARY_BRANCH.BranchName, tblbookcopies.numberOfCopies
+FROM tblBookCopies
+INNER JOIN tblbooks ON  tblbookcopies.bookid=tblbooks.bookid
+inner join tblLIBRARY_BRANCH on tblBookCopies.branchid=tblLIBRARY_BRANCH.BranchID
+
+where tblbooks.title = 'The Lost Tribe'
+
+
+--execute filling variable
+
+exec [dbo].[spFindByNameLocal] @titlename = 'The Lost Tribe'
+
+select * from tblBookAuthors
+select * from tblBookCopies
+select * from tblBookLoans
+select * from tblBooks
+select * from tblBorrower
+select * from tblLIBRARY_BRANCH
+select * from tblPublisher
+
+-- stored procedure for retrieving names of borrowers who have not checked out anything
+create procedure spNoneOut
+as
+
+select name
+from tblborrower
+left join tblbookloans on tblborrower.cardno=tblbookloans.cardno
+
+where  tblbookloans.bookid is null
+
+exec spNoneOut
+ 

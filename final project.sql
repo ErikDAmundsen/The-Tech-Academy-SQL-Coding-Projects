@@ -244,6 +244,7 @@ select* from tblBorrower
 create table tblBookLoans ( bookid int foreign key references tblbooks(bookid) not null , branchid int foreign key references tblLibrary_branch(branchid) not null, 
 cardno int foreign key references tblBorrower(cardno), dateout date, dateDue date)  
 
+
 insert into tblBookLoans ( bookid, branchid, cardno, dateout,datedue)
 values
 
@@ -299,7 +300,11 @@ values
 (25,3,10,'2018-11-01','2018-12-01'),
 (25,3,5,'2018-11-01','2018-12-01'),
 (26,1,7,'2018-11-01','2018-12-01'),
-(26,4,5,'2018-10-30','2018-11-30')
+(26,4,5,'2018-10-30','2018-11-30'),
+(26,4,5,'2018-10-30','2018-12-03'),
+(2,1,10,'2018-11-03','2018-12-03'),
+(2,2,10,'2018-11-03','2018-12-03')
+
 
 select * from tblBookLoans
 
@@ -308,7 +313,7 @@ select * from tblBookLoans
 
 
 
---stored procedure for count of copies of The Last Tribe at sharpstown location ( location 2)
+--1.) How many copies of the book titled "The Lost Tribe" are owned by the library branch whose name is "Sharpstown"?( location 2)
 create procedure spTLTCount
 as
 
@@ -317,7 +322,7 @@ select   numberOfCopies as 'copies of The Last Tribe' from tblbookcopies where  
 --execute
 exec spTLTCount
 
--- stored procedure for counting THe Lost Tribe ( as a variable) at all locations
+-- 2.) How many copies of the book titled "The Lost Tribe" are owned by each library branch?
 
 create procedure spFindByNameLocal
 
@@ -337,15 +342,9 @@ where tblbooks.title = 'The Lost Tribe'
 
 exec [dbo].[spFindByNameLocal] @titlename = 'The Lost Tribe'
 
-select * from tblBookAuthors
-select * from tblBookCopies
-select * from tblBookLoans
-select * from tblBooks
-select * from tblBorrower
-select * from tblLIBRARY_BRANCH
-select * from tblPublisher
 
--- stored procedure for retrieving names of borrowers who have not checked out anything
+
+-- 3.) Retrieve the names of all borrowers who do not have any books checked out.
 create procedure spNoneOut
 as
 
@@ -357,3 +356,57 @@ where  tblbookloans.bookid is null
 
 exec spNoneOut
  
+
+ --4.) For each book that is loaned out from the "Sharpstown" branch and whose DueDate is today, retrieve the book title,
+ -- the borrower's name, and the borrower's address.
+
+create procedure  
+spDUEDATE
+as
+ select tblBooks.title as "Book Title", tblBorrower.name as 'Borrowers Name', tblBorrower.borAddress as 'Address', tblBookLoans.datedue as 'date due'
+ from  tblbookloans
+inner join  tblbooks 
+on tblbookloans.bookid=tblbooks.bookid
+inner join tblborrower
+on  tblborrower.cardno=tblbookloans.cardno
+ where datedue= convert (varchar(20) , getdate())
+ and tblBookLoans.branchid  = 2;
+ --Execute 4
+ exec spDUEDATE
+
+
+ --5.) For each library branch, retrieve the branch name and the total number of books loaned out from that branch.
+ create procedure spBOOKSOUT
+ as
+select  count( tblbookloans.branchid ) as 'Books Out' ,tblLIBRARY_BRANCH.branchname   
+from  tblbookloans
+inner join tblLIBRARY_BRANCH
+on tblBookLoans.branchid=tblLIBRARY_BRANCH.branchid
+group by branchname
+
+--execute
+exec spBOOKSOUT
+
+--6.) Retrieve the names, addresses, and the number of books checked out for all borrowers 
+--who have more than five books checked out.
+
+create procedure spOVER5
+as
+select tblborrower.name as 'Borrower Name', tblborrower.borAddress as 'Borrowers Address',count(tblbookloans.cardno) as 'Books Out'
+from tblborrower
+inner join  tblBookLoans on tblborrower.cardno=tblbookloans.cardno
+group by tblborrower.cardno, tblborrower.name, tblborrower.borAddress
+having count(tblbookloans.cardno) > 5
+
+--execute 6
+exec spover5
+
+
+
+ select * from tblBookAuthors
+select * from tblBookCopies
+select * from tblBookLoans
+select * from tblBooks
+select * from tblBorrower
+select * from tblLIBRARY_BRANCH
+select * from tblPublisher

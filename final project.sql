@@ -404,18 +404,26 @@ exec spOVER5
 --7.) For each book authored (or co-authored) by "Stephen King", retrieve the title and the number of copies owned by the library branch whose name is "Central".
 
 
-select tblbookauthors.authorname, tblbooks.title, tblLIBRARY_BRANCH.BranchName, count(tblbookcopies.numberOfCopies) 
-from tblbooks
-inner join tblBookAuthors on tblBooks.bookid=tblbookauthors.bookid
+create procedure
+spCOPIES
+as
+declare @authorname varchar(50), @branchname varchar(50)
+
+select tblbookauthors.authorname as 'Authors Name', tblbooks.title as 'Book Title', tblLIBRARY_BRANCH.BranchName as 'Branch Location',  sum(tblbookcopies.numberOfCopies) as 'Number of Copies'
+from tblBookAuthors
+inner join tblbooks on tblBooks.bookid=tblbookauthors.bookid
 inner join tblbookcopies on tblbooks.bookid=tblBookCopies.bookid
+inner join tblLIBRARY_BRANCH
+ on tblLIBRARY_BRANCH.BranchID=tblbookcopies.branchid
+ group by tblbookauthors.authorname, tblbooks.title, tblLIBRARY_BRANCH.BranchName,tblbookcopies.numberOfCopies
+ having tblbookauthors.authorname = 'Stephen King'
+ and tblLIBRARY_BRANCH.BranchName= 'Central'
 
+ 
+ --Execute 7
 
-inner join tblLIBRARY_BRANCH.branchid
-inner join tblbookcopies.branchid on tblLIBRARY_BRANCH.BranchID=tblbookcopies.branchid
-
-
--- stopped here, trying to figure out how to do multiple different inner joins on same query
-
+ exec spCOPIES 
+ 
 
  select * from tblBookAuthors
 select * from tblBookCopies

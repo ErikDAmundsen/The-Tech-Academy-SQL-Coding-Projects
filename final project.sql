@@ -399,8 +399,22 @@ group by tblborrower.cardno, tblborrower.name, tblborrower.borAddress
 having count(tblbookloans.cardno) > 5
 
 --execute 6
-exec spover5
+exec spOVER5
 
+--7.) For each book authored (or co-authored) by "Stephen King", retrieve the title and the number of copies owned by the library branch whose name is "Central".
+
+
+select tblbookauthors.authorname, tblbooks.title, tblLIBRARY_BRANCH.BranchName, count(tblbookcopies.numberOfCopies) 
+from tblbooks
+inner join tblBookAuthors on tblBooks.bookid=tblbookauthors.bookid
+inner join tblbookcopies on tblbooks.bookid=tblBookCopies.bookid
+
+
+inner join tblLIBRARY_BRANCH.branchid
+inner join tblbookcopies.branchid on tblLIBRARY_BRANCH.BranchID=tblbookcopies.branchid
+
+
+-- stopped here, trying to figure out how to do multiple different inner joins on same query
 
 
  select * from tblBookAuthors
